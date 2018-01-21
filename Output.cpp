@@ -13,58 +13,17 @@ void initializeSoftPWM(void);
 /**************************************************************************************/
 // since we are uing the PWM generation in a direct way, the pin order is just to inizialie the right pins 
 // its not possible to change a PWM output pin just by changing the order
-#if defined(PROMINI)
-  uint8_t PWM_PIN[8] = {9,10,11,3,6,5,A2,12};   //for a quad+: rear,right,left,front
-#endif
+uint8_t PWM_PIN[8] = {9,10,11,3,6,5,A2,12};   //for a quad+: rear,right,left,front
 
 /**************************************************************************************/
 /************  Writes the Motors values to the PWM compare register  ******************/
 /**************************************************************************************/
 void writeMotors() { // [1000;2000] => [125;250]
-  /********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
-  #if defined(PROMINI)
-    #if (NUMBER_MOTOR > 0)
-      #ifdef EXT_MOTOR_RANGE            // 490Hz
-        OCR1A = ((motor[0]>>2) - 250);
-      #elif defined(EXT_MOTOR_32KHZ)
-        OCR1A = (motor[0] - 1000) >> 2; //  pin 9
-      #elif defined(EXT_MOTOR_4KHZ)
-        OCR1A = (motor[0] - 1000) << 1;
-      #elif defined(EXT_MOTOR_1KHZ)
-        OCR1A = (motor[0] - 1000) << 3;
-      #else
-        OCR1A = motor[0]>>3; //  pin 9
-      #endif
-    #endif
-    #if (NUMBER_MOTOR > 1)
-      #ifdef EXT_MOTOR_RANGE            // 490Hz
-        OCR1B = ((motor[1]>>2) - 250);
-      #elif defined(EXT_MOTOR_32KHZ)
-        OCR1B = (motor[1] - 1000) >> 2; //  pin 10
-      #elif defined(EXT_MOTOR_4KHZ)
-        OCR1B = (motor[1] - 1000) << 1;
-      #elif defined(EXT_MOTOR_1KHZ)
-        OCR1B = (motor[1] - 1000) << 3;
-      #else
-        OCR1B = motor[1]>>3; //  pin 10
-      #endif
-    #endif
-    #if (NUMBER_MOTOR > 2)
-      #ifdef EXT_MOTOR_RANGE            // 490Hz
-        OCR2A = ((motor[2]>>2) - 250);
-      #elif defined(EXT_MOTOR_32KHZ)
-        OCR2A = (motor[2] - 1000) >> 2; //  pin 11
-      #elif defined(EXT_MOTOR_4KHZ)
-        OCR2A = (motor[2] - 1000) >> 2;
-      #elif defined(EXT_MOTOR_1KHZ)
-        OCR2A = (motor[2] - 1000) >> 2;
-      #else
-        OCR2A = motor[2]>>3; //  pin 11
-      #endif
-    #endif
+	/********  Specific PWM Timers & Registers for the atmega328P (Promini)   ************/
+	OCR1A = motor[0]>>3; //  pin 9
+	OCR1B = motor[1]>>3; //  pin 10
+	OCR2A = motor[2]>>3; //  pin 11
     OCR2B = motor[3]>>3; //  pin 3
-
-  #endif
 }
 
 /**************************************************************************************/

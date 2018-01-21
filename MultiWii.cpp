@@ -243,33 +243,30 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 
   // query at most one multiplexed analog channel per MWii cycle
   static uint8_t analogReader =0;
-  switch (analogReader++ % (3+VBAT_CELLS_NUM)) {
-  case 0:
-  {
-
-    break;
-  }
-
-  case 1:
-  {
-
-    break;
-  }
-  case 2:
-  {
-
-   break;
-  }
-  default: // here analogReader >=4, because of ++ in switch()
-  {
-
-    break;
-  } // end default
-  } // end of switch()
+//  switch (analogReader++ % (3+VBAT_CELLS_NUM)){
+//	  case 0:
+//	  {
+//		break;
+//	  }
+//	  case 1:
+//	  {
+//
+//		break;
+//	  }
+//	  case 2:
+//	  {
+//
+//	   break;
+//	  }
+//	  default: // here analogReader >=4, because of ++ in switch()
+//	  {
+//		break;
+//	  } // end default
+//  } // end of switch()
 
   if ( (calibratingA>0 && ACC ) || (calibratingG>0) ) { // Calibration phasis
     LEDPIN_TOGGLE;
-  } else {
+  }else{
     if (f.ACC_CALIBRATED) {LEDPIN_OFF;}
     if (f.ARMED) {LEDPIN_ON;}
   }
@@ -295,17 +292,16 @@ void setup() {
   POWERPIN_PINMODE;
   BUZZERPIN_PINMODE;
   STABLEPIN_PINMODE;
-  POWERPIN_OFF;  
-  
-  initOutput(); 
-  
+  POWERPIN_OFF;
+  initOutput();
   readGlobalSet();   
   
   global_conf.currentSet=0;
   
   while(1) {                                                    // check settings integrity
 	readEEPROM();
-    if(global_conf.currentSet == 0) break;                      // all checks is done
+    if(global_conf.currentSet == 0)
+    		break;                      // all checks is done
     global_conf.currentSet--;                                   // next setting for check
   }
   readGlobalSet();                              // reload global settings for get last profile number
@@ -344,31 +340,38 @@ void loop () {
   int16_t rc;
   int32_t prop = 0;
   
-  if ((int16_t)(currentTime-rcTime) >0 ) { // 50Hz
-    rcTime = currentTime + 20000;
-    computeRC();
+  if ((int16_t)(currentTime-rcTime) >0 )
+  {
+	  // 50Hz
+	rcTime = currentTime + 20000;
+	computeRC();
 
     // ------------------ STICKS COMMAND HANDLER --------------------
     // checking sticks positions
     uint8_t stTmp = 0;
-    for(i=0;i<4;i++) {
+    for(i=0;i<4;i++)
+    {
       stTmp >>= 2;
       if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN
       if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX
     }
-    if(stTmp == rcSticks) {
+    if(stTmp == rcSticks)
+    {
       if(rcDelayCommand<250) rcDelayCommand++;
-    } else rcDelayCommand = 0;
+    }
+    else
+    	rcDelayCommand = 0;
     rcSticks = stTmp;
     
-    // perform actions   
-     
+    // perform actions
     if(rcData[THROTTLE] <= MINCHECK) 
     {
     	  // THROTTLE at minimum
-    	  errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
+    	  errorGyroI[ROLL] = 0;
+    	  errorGyroI[PITCH] = 0;
     	  errorGyroI_YAW = 0;
-    	  errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+    	  errorAngleI[ROLL] = 0;
+    	  errorAngleI[PITCH] = 0;
     
       if (conf.activate[BOXARM] > 0) 
       {             // Arming/Disarming via ARM BOX
@@ -381,9 +384,9 @@ void loop () {
           go_disarm();
         }
       }
-      go_arm();   
     }
-    if(rcDelayCommand == 20) {
+    if(rcDelayCommand == 20)
+    {
       if(f.ARMED)
       {                   // actions during armed
     	  	  if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE) go_disarm();    // Disarm via YAW
@@ -391,36 +394,40 @@ void loop () {
       else
       {
     	  	// actions during not armed
-
         i=0;
         if (rcSticks == THR_LO + YAW_LO + PIT_LO + ROL_CE) {    // GYRO calibration
           calibratingG=512;
         }
-
         if (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_CE) {            // Enter LCD config
           previousTime = micros();
         }
-        
-        #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
-          else if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_HI + PIT_CE + ROL_CE) 
-          {
-            //시동 걸리는 위치.
-            go_arm();      // Arm via YAW
-          }
-        #endif
-
+        else if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_HI + PIT_CE + ROL_CE)
+		{
+			//시동 걸리는 위치.
+			go_arm();      // Arm via YAW
+		}
         else if (rcSticks == THR_HI + YAW_LO + PIT_LO + ROL_CE) calibratingA=512;     // throttle=max, yaw=left, pitch=min
 
         i=0;
-        if      (rcSticks == THR_HI + YAW_CE + PIT_HI + ROL_CE) {conf.angleTrim[PITCH]+=2; i=1;}
-        else if (rcSticks == THR_HI + YAW_CE + PIT_LO + ROL_CE) {conf.angleTrim[PITCH]-=2; i=1;}
-        else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_HI) {conf.angleTrim[ROLL] +=2; i=1;}
-        else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_LO) {conf.angleTrim[ROLL] -=2; i=1;}
+        if(rcSticks == THR_HI + YAW_CE + PIT_HI + ROL_CE)
+        {
+        		conf.angleTrim[PITCH]+=2; i=1;
+        }
+        else if (rcSticks == THR_HI + YAW_CE + PIT_LO + ROL_CE)
+        {
+        		conf.angleTrim[PITCH]-=2; i=1;
+        }
+        else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_HI)
+        {
+        		conf.angleTrim[ROLL] +=2; i=1;
+        }
+        else if (rcSticks == THR_HI + YAW_CE + PIT_CE + ROL_LO)
+        {
+        		conf.angleTrim[ROLL] -=2; i=1;
+        }
         if (i) {
           writeParams(1);
           rcDelayCommand = 0;
-          // allow autorepetition
-
         }
       }
     }
@@ -431,57 +438,73 @@ void loop () {
       rcOptions[i] = (auxState & conf.activate[i])>0;
 
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
-    #if ACC
-      if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) { 
-        // bumpless transfer to Level mode
-        if (!f.ANGLE_MODE) {
-          errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
-          f.ANGLE_MODE = 1;
-        }  
-      } else {
-        if(f.ANGLE_MODE){
-          errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
-        }
-        f.ANGLE_MODE = 0;
-      }
-      if ( rcOptions[BOXHORIZON] ) {
-        f.ANGLE_MODE = 0;
-        if (!f.HORIZON_MODE) {
-          errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
-          f.HORIZON_MODE = 1;
-        }
-      } else {
-        if(f.HORIZON_MODE){
-          errorGyroI[ROLL] = 0;errorGyroI[PITCH] = 0;
-        }
-        f.HORIZON_MODE = 0;
-      }
-    #endif
-
-    if (rcOptions[BOXARM] == 0) f.OK_TO_ARM = 1;
-    if (rcOptions[BOXMAG]) {
-      if (!f.MAG_MODE) {
+	if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) )
+	{
+		// bumpless transfer to Level mode
+		if (!f.ANGLE_MODE)
+		{
+			errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+			f.ANGLE_MODE = 1;
+		}
+	}
+	else
+	{
+		if(f.ANGLE_MODE)
+		{
+			errorGyroI[ROLL] = 0; errorGyroI[PITCH] = 0;
+		}
+		f.ANGLE_MODE = 0;
+	}
+	if ( rcOptions[BOXHORIZON] )
+	{
+		f.ANGLE_MODE = 0;
+		if (!f.HORIZON_MODE)
+		{
+			errorAngleI[ROLL] = 0; errorAngleI[PITCH] = 0;
+			f.HORIZON_MODE = 1;
+		}
+	}
+	else
+	{
+		if(f.HORIZON_MODE)
+		{
+			errorGyroI[ROLL] = 0;errorGyroI[PITCH] = 0;
+		}
+		f.HORIZON_MODE = 0;
+	}
+    if (rcOptions[BOXARM] == 0)
+    	f.OK_TO_ARM = 1;
+    if (rcOptions[BOXMAG])
+    {
+      if (!f.MAG_MODE)
+      {
         f.MAG_MODE = 1;
         magHold = att.heading;
       }
-    } else {
+    }
+    else
+    {
       f.MAG_MODE = 0;
     }
-  } else { // not in rc loop
-    static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
-    switch (taskOrder) {
-      case 0:
-        taskOrder++;
-      case 1:
-        taskOrder++;
-      case 2:
-        taskOrder++;
-      case 3:
-        taskOrder++;
-      case 4:
-        taskOrder=0;
-        break;
-    }
+  }
+  else
+  {
+	  // not in rc loop
+	static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
+	switch (taskOrder)
+	{
+		case 0:
+			taskOrder++;
+		case 1:
+			taskOrder++;
+		case 2:
+			taskOrder++;
+		case 3:
+			taskOrder++;
+		case 4:
+			taskOrder=0;
+		break;
+	}
   }
  
   while(1)
